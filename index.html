@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script type="text/javascript" src="app.js"></script>
+		<link rel="stylesheet" href="app.css" type="text/css" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blockly JS Game & Website Builder</title>
+
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/msg/en.js"></script>
+
+  <style>
+    :root {
+      --bg: #111;
+      --panel: #1a1a1a;
+      --panel-2: #222;
+      --text: #f2f2f2;
+      --accent: #00c3ff;
+      --accent-hover: #0099cc;
+      --border: #333;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 14px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: #0d0d0d;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 58px);
+      min-height: 600px;
+    }
+
+    #blocklyDiv {
+      width: 62%;
+      height: 100%;
+      background: var(--panel-2);
+    }
+
+    .rightPanel {
+      width: 38%;
+      padding: 12px;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      overflow: auto;
+    }
+
+    .btnRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    h3 {
+      margin: 14px 0 8px;
+      font-size: 16px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 10px;
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-height: 180px;
+      max-height: 260px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    iframe {
+      width: 100%;
+      height: 260px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .hint {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧠 Blockly JS Game & Website Builder</h1>
+  </header>
+
+  <div class="container">
+    <div id="blocklyDiv"></div>
+
+    <div class="rightPanel">
+      <div class="btnRow">
+        <button onclick="runCode()">▶ Run Code</button>
+        <button onclick="clearOutput()">🧹 Clear Output</button>
+        <button onclick="exportJS()">⬇ Export JS</button>
+        <button onclick="exportHTML()">⬇ Export HTML</button>
+      </div>
+
+      <h3>Generated JS</h3>
+      <pre id="code"></pre>
+
+      <h3>Live Output</h3>
+      <iframe id="output" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+
+      <div class="hint">
+        Variables are in the Variables category. Lists are in the Lists category.
+        The custom blocks below add quick variable, list, alert, and image-import helpers.
+      </div>
+    </div>
+  </div>
+
+  <xml id="toolbox" style="display:none">
+    <category name="Logic" colour="210">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_boolean"></block>
+      <block type="logic_negate"></block>
+    </category>
+
+    <category name="Loops" colour="120">
+      <block type="controls_repeat_ext"></block>
+      <block type="controls_whileUntil"></block>
+      <block type="controls_for"></block>
+      <block type="controls_forEach"></block>
+      <block type="controls_flow_statements"></block>
+    </category>
+
+    <category name="Math" colour="230">
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+      <block type="math_single"></block>
+      <block type="math_trig"></block>
+      <block type="math_random_int"></block>
+      <block type="math_round"></block>
+    </category>
+
+    <category name="Text" colour="160">
+      <block type="text"></block>
+      <block type="text_join"></block>
+      <block type="text_print"></block>
+      <block type="text_length"></block>
+      <block type="text_changeCase"></block>
+      <block type="text_trim"></block>
+    </category>
+
+    <category name="Variables" custom="VARIABLE" colour="330"></category>
+
+    <category name="Lists" colour="260">
+      <block type="lists_create_with"></block>
+      <block type="lists_create_empty"></block>
+      <block type="lists_repeat"></block>
+      <block type="lists_length"></block>
+      <block type="lists_isEmpty"></block>
+      <block type="lists_indexOf"></block>
+      <block type="lists_getIndex"></block>
+      <block type="lists_setIndex"></block>
+      <block type="lists_getSublist"></block>
+      <block type="lists_sort"></block>
+    </category>
+
+    <category name="Game / Web" colour="20">
+      <block type="create_element"></block>
+      <block type="set_text"></block>
+      <block type="set_style"></block>
+      <block type="move_element"></block>
+      <block type="on_click"></block>
+      <block type="set_timeout"></block>
+      <block type="console_log"></block>
+      <block type="alert_block"></block>
+      <block type="import_image"></block>
+      <block type="save_storage"></block>
+      <block type="load_storage"></block>
+      <block type="set_variable"></block>
+      <block type="change_variable"></block>
+      <block type="create_list"></block>
+      <block type="list_add"></block>
+      <block type="list_remove_last"></block>
+      <block type="list_get_item"></block>
+      <block type="list_length_custom"></block>
+    </category>
+  </xml>
+
+  <script>
+    const JS = Blockly.JavaScript || Blockly.javascriptGenerator;
+    const defineJson = (Blockly.common && Blockly.common.defineBlocksWithJsonArray)
+      ? Blockly.common.defineBlocksWithJsonArray
+      : Blockly.defineBlocksWithJsonArray;
+
+    const ORDER_NONE = JS.ORDER_NONE ?? 0;
+    const ORDER_ATOMIC = JS.ORDER_ATOMIC ?? 0;
+
+    defineJson([
+      {
+        "type": "console_log",
+        "message0": "console log %1",
+        "args0": [
+          { "type": "input_value", "name": "TEXT" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 300
+      },
+      {
+        "type": "alert_block",
+        "message0": "alert %1",
+        "args0": [
+          { "type": "input_value", "name": "TEXT" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 0
+      },
+      {
+        "type": "set_variable",
+        "message0": "set variable %1 to %2",
+        "args0": [
+          { "type": "field_variable", "name": "VAR", "variable": "item" },
+          { "type": "input_value", "name": "VALUE" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 330
+      },
+      {
+        "type": "change_variable",
+        "message0": "change variable %1 by %2",
+        "args0": [
+          { "type": "field_variable", "name": "VAR", "variable": "item" },
+          { "type": "input_value", "name": "VALUE" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 330
+      },
+      {
+        "type": "create_list",
+        "message0": "create empty list %1",
+        "args0": [
+          { "type": "field_variable", "name": "LIST", "variable": "myList" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 260
+      },
+      {
+        "type": "list_add",
+        "message0": "add %1 to list %2",
+        "args0": [
+          { "type": "input_value", "name": "ITEM" },
+          { "type": "field_variable", "name": "LIST", "variable": "myList" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 260
+      },
+      {
+        "type": "list_remove_last",
+        "message0": "remove last item from list %1",
+        "args0": [
+          { "type": "field_variable", "name": "LIST", "variable": "myList" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 260
+      },
+      {
+        "type": "list_get_item",
+        "message0": "get item %1 from list %2",
+        "args0": [
+          { "type": "input_value", "name": "INDEX" },
+          { "type": "field_variable", "name": "LIST", "variable": "myList" }
+        ],
+        "output": null,
+        "colour": 260
+      },
+      {
+        "type": "list_length_custom",
+        "message0": "length of list %1",
+        "args0": [
+          { "type": "field_variable", "name": "LIST", "variable": "myList" }
+        ],
+        "output": "Number",
+        "colour": 260
+      },
+      {
+        "type": "create_element",
+        "message0": "create element %1 id %2",
+        "args0": [
+          { "type": "field_input", "name": "TAG", "text": "div" },
+          { "type": "field_input", "name": "ID", "text": "box" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 20
+      },
+      {
+        "type": "set_text",
+        "message0": "set text of %1 to %2",
+        "args0": [
+          { "type": "field_input", "name": "ID", "text": "box" },
+          { "type": "input_value", "name": "TEXT" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 20
+      },
+      {
+        "type": "set_style",
+        "message0": "set %1 style %2 to %3",
+        "args0": [
+          { "type": "field_input", "name": "ID", "text": "box" },
+          { "type": "field_input", "name": "STYLE", "text": "color" },
+          { "type": "input_value", "name": "VALUE" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 20
+      },
+      {
+        "type": "move_element",
+        "message0": "move %1 x %2 y %3",
+        "args0": [
+          { "type": "field_input", "name": "ID", "text": "box" },
+          { "type": "input_value", "name": "X" },
+          { "type": "input_value", "name": "Y" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 45
+      },
+      {
+        "type": "on_click",
+        "message0": "when %1 clicked do %2",
+        "args0": [
+          { "type": "field_input", "name": "ID", "text": "box" },
+          { "type": "input_statement", "name": "DO" }
+        ],
+        "colour": 60
+      },
+      {
+        "type": "set_timeout",
+        "message0": "wait %1 ms then %2",
+        "args0": [
+          { "type": "input_value", "name": "TIME" },
+          { "type": "input_statement", "name": "DO" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 120
+      },
+      {
+        "type": "import_image",
+        "message0": "import image as %1 with id %2",
+        "args0": [
+          { "type": "field_input", "name": "ALT", "text": "picture" },
+          { "type": "field_input", "name": "ID", "text": "img1" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 195
+      },
+      {
+        "type": "save_storage",
+        "message0": "save %1 as %2",
+        "args0": [
+          { "type": "input_value", "name": "VALUE" },
+          { "type": "field_input", "name": "KEY", "text": "data" }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 15
+      },
+      {
+        "type": "load_storage",
+        "message0": "load %1",
+        "args0": [
+          { "type": "field_input", "name": "KEY", "text": "data" }
+        ],
+        "output": null,
+        "colour": 15
+      }
+    ]);
+
+    JS.forBlock['console_log'] = function(block, generator) {
+      const text = generator.valueToCode(block, 'TEXT', ORDER_NONE) || '""';
+      return `console.log(${text});\n`;
+    };
+
+    JS.forBlock['alert_block'] = function(block, generator) {
+      const text = generator.valueToCode(block, 'TEXT', ORDER_NONE) || '""';
+      return `alert(${text});\n`;
+    };
+
+    JS.forBlock['set_variable'] = function(block, generator) {
+      const rawVar = block.getFieldValue('VAR');
+      const value = generator.valueToCode(block, 'VALUE', ORDER_NONE) || '0';
+      return `let ${rawVar} = ${value};\n`;
+    };
+
+    JS.forBlock['change_variable'] = function(block, generator) {
+      const rawVar = block.getFieldValue('VAR');
+      const value = generator.valueToCode(block, 'VALUE', ORDER_NONE) || '0';
+      return `${rawVar} += ${value};\n`;
+    };
+
+    JS.forBlock['create_list'] = function(block) {
+      const rawList = block.getFieldValue('LIST');
+      return `let ${rawList} = [];\n`;
+    };
+
+    JS.forBlock['list_add'] = function(block, generator) {
+      const rawList = block.getFieldValue('LIST');
+      const item = generator.valueToCode(block, 'ITEM', ORDER_NONE) || 'null';
+      return `${rawList}.push(${item});\n`;
+    };
+
+    JS.forBlock['list_remove_last'] = function(block) {
+      const rawList = block.getFieldValue('LIST');
+      return `${rawList}.pop();\n`;
+    };
+
+    JS.forBlock['list_get_item'] = function(block, generator) {
+      const rawList = block.getFieldValue('LIST');
+      const index = generator.valueToCode(block, 'INDEX', ORDER_NONE) || '1';
+      return [`${rawList}[(${index}) - 1]`, ORDER_ATOMIC];
+    };
+
+    JS.forBlock['list_length_custom'] = function(block) {
+      const rawList = block.getFieldValue('LIST');
+      return [`${rawList}.length`, ORDER_ATOMIC];
+    };
+
+    JS.forBlock['create_element'] = function(block) {
+      const tag = block.getFieldValue('TAG');
+      const id = block.getFieldValue('ID');
+      return `
+let ${id} = document.createElement("${tag}");
+${id}.id = "${id}";
+document.body.appendChild(${id});
+`;
+    };
+
+    JS.forBlock['set_text'] = function(block, generator) {
+      const id = block.getFieldValue('ID');
+      const text = generator.valueToCode(block, 'TEXT', ORDER_NONE) || '""';
+      return `document.getElementById("${id}").innerText = ${text};\n`;
+    };
+
+    JS.forBlock['set_style'] = function(block, generator) {
+      const id = block.getFieldValue('ID');
+      const style = block.getFieldValue('STYLE');
+      const value = generator.valueToCode(block, 'VALUE', ORDER_NONE) || '""';
+      return `document.getElementById("${id}").style.${style} = ${value};\n`;
+    };
+
+    JS.forBlock['move_element'] = function(block, generator) {
+      const id = block.getFieldValue('ID');
+      const x = generator.valueToCode(block, 'X', ORDER_NONE) || '0';
+      const y = generator.valueToCode(block, 'Y', ORDER_NONE) || '0';
+      return `
+{
+  const el = document.getElementById("${id}");
+  if (el) {
+    el.style.position = "absolute";
+    el.style.left = ${x} + "px";
+    el.style.top = ${y} + "px";
+  }
+}
+`;
+    };
+
+    JS.forBlock['on_click'] = function(block, generator) {
+      const id = block.getFieldValue('ID');
+      const body = generator.statementToCode(block, 'DO');
+      return `
+document.getElementById("${id}").onclick = function() {
+${body}};
+`;
+    };
+
+    JS.forBlock['set_timeout'] = function(block, generator) {
+      const time = generator.valueToCode(block, 'TIME', ORDER_NONE) || '0';
+      const body = generator.statementToCode(block, 'DO');
+      return `
+setTimeout(() => {
+${body}}, ${time});
+`;
+    };
+
+    JS.forBlock['import_image'] = function(block) {
+      const alt = block.getFieldValue('ALT').replace(/"/g, '\\"');
+      const id = block.getFieldValue('ID').replace(/[^a-zA-Z0-9_$]/g, '_');
+      return `
+{
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = "image/*";
+  picker.style.display = "none";
+  document.body.appendChild(picker);
+
+  picker.addEventListener("change", () => {
+    const file = picker.files && picker.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ${id} = document.createElement("img");
+      ${id}.src = reader.result;
+      ${id}.alt = "${alt}";
+      ${id}.id = "${id}";
+      ${id}.style.maxWidth = "300px";
+      ${id}.style.display = "block";
+      ${id}.style.margin = "10px 0";
+      document.body.appendChild(${id});
+      picker.remove();
+    };
+    reader.readAsDataURL(file);
+  }, { once: true });
+
+  picker.click();
+}
+`;
+    };
+
+    JS.forBlock['save_storage'] = function(block, generator) {
+      const key = block.getFieldValue('KEY');
+      const value = generator.valueToCode(block, 'VALUE', ORDER_NONE) || '""';
+      return `localStorage.setItem("${key}", ${value});\n`;
+    };
+
+    JS.forBlock['load_storage'] = function(block) {
+      const key = block.getFieldValue('KEY');
+      return [`localStorage.getItem("${key}")`, ORDER_ATOMIC];
+    };
+
+    const workspace = Blockly.inject('blocklyDiv', {
+      toolbox: document.getElementById('toolbox'),
+      trashcan: true,
+      scrollbars: true,
+      zoom: {
+        controls: true,
+        wheel: true,
+        startScale: 0.9,
+        maxScale: 3,
+        minScale: 0.3,
+        scaleSpeed: 1.1
+      }
+    });
+
+    function getGeneratedCode() {
+      return JS.workspaceToCode(workspace);
+    }
+
+    function refreshCodePanel() {
+      const code = getGeneratedCode();
+      document.getElementById('code').textContent = code || '// Drop blocks here to generate code';
+      return code;
+    }
+
+    function runCode() {
+      const code = refreshCodePanel();
+      const iframe = document.getElementById('output');
+      iframe.srcdoc = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+  </style>
+</head>
+<body>
+<script>
+try {
+${code}
+} catch (e) {
+  document.body.innerHTML = '<pre style="white-space:pre-wrap;color:red;">' + e + '</pre>';
+}
+<\/script>
+</body>
+</html>`;
+    }
+
+    function clearOutput() {
+      document.getElementById('code').textContent = '';
+      document.getElementById('output').srcdoc = '';
+    }
+
+    function exportFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJS() {
+      const code = refreshCodePanel();
+      exportFile('generated-code.js', code, 'text/javascript');
+    }
+
+    function exportHTML() {
+      const code = refreshCodePanel();
+      const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exported Blockly Project</title>
+</head>
+<body>
+<script>
+try {
+${code}
+} catch (e) {
+  document.body.innerHTML = '<pre style="white-space:pre-wrap;color:red;">' + e + '</pre>';
+}
+<\/script>
+</body>
+</html>`;
+      exportFile('exported-project.html', html, 'text/html');
+    }
+
+    workspace.addChangeListener(() => {
+      refreshCodePanel();
+    });
+
+    refreshCodePanel();
+  </script>
+</body>
+</html>
